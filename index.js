@@ -19,12 +19,12 @@ const moment = require('moment-timezone');
     const refreshTokenOld = await storage.get('auth', 'refreshToken')
     const emailOld = await storage.get('auth', 'email')
     let authorization = authorizationOld, refreshToken, email = emailOld;
-    if (authorizationOld && emailOld && refreshTokenOld && (emailOld == config.email )) {
+    if (authorizationOld && emailOld && refreshTokenOld && (emailOld == config.email)) {
         await delay(1000)
         spinner.text = 'Checking account...'
         const checkAacc = await api.getAccInfo(authorizationOld)
         await delay(1000)
-        if (checkAacc.error?.hasOwnProperty('code') && checkAacc.error?.hasOwnProperty('message') ) {
+        if (checkAacc.error && (checkAacc.error.hasOwnProperty('code') && checkAacc.error.hasOwnProperty('message'))) {
             if (refreshTokenOld) {
                 spinner.text = 'Refresh Token ...'
                 await delay(1000)
@@ -56,7 +56,6 @@ const moment = require('moment-timezone');
                 })
                 spinner.succeed(`Login Success (${grey(email)})`);
             }
-            
         }
     } else {
         if (!config.email || !config.password) return spinner.fail(`Login Failed: Periksa file config.json`);
@@ -78,12 +77,14 @@ const moment = require('moment-timezone');
         spinner.succeed(`Login Success (${grey(email)})`);
     }
     spinner.start('Get user data...');
+
     await delay(1000)
-    const getProfile = await api.getUser(authorization)
-    if (!getProfile) return spinner.fail('Error: Get User Error')
-    let { id, first_name, last_name, wallet_address } = getProfile
+    const getUser = await api.getUser(authorization)
+    if (!getUser) return spinner.fail('Error: Get User Error')
+    let { id, first_name, last_name, wallet_address } = getUser
     await delay(1000)
     spinner.info(`Hi ${first_name} ${last_name}, how are u?`);
+
     spinner.start(`Get trx from wallet ${wallet_address}...`);
     const trx = await api.getTrx(wallet_address)
     spinner.info(`checking trx in ${wallet_address}...`)
@@ -111,7 +112,7 @@ const moment = require('moment-timezone');
     spinner.text = 'fetching tracking number...'
     const trackNum = await api.getTN(authorization)
     trackNum.map((item) => {
-        item.result = (item.tracking_numbers?.length >= 1) ? item.tracking_numbers[0].result : 'waiting'
+        item.result = (item.tracking_numbers.length >= 1) ? item.tracking_numbers[0].result : 'waiting'
         delete item.batch_uuid
         delete item.tracking_numbers
     })
